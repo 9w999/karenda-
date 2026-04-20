@@ -2,7 +2,6 @@ const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 app.use(express.json());
-
 const GAS_URL = process.env.GAS_URL;
 const PORT = process.env.PORT || 3000;
 
@@ -15,29 +14,29 @@ app.post('/webhook', async (req, res) => {
   res.status(200).send('OK');
 
   const events = req.body.events || [];
+  let log = ""; // ← ループの外に出す
+
   for (const event of events) {
     const userId = event.source.userId;
-    let log = "log:" + userId
+    log = "log:" + userId;
 
     if (event.type === 'message') {
       if (event.message.type === 'image') {
-        log = log + "画像メッセージ"
+        log = log + " 画像メッセージ";
       } else if (event.message.type === 'text') {
         const input = event.message.text;
-
         if (input.match('ヘルプ')) {
-          text3 = "担当者にメッセージを送りました\n確認までしばらくお待ちください";
-          log = log + "help(imput)" + "replyToUser(" + event.replyToken + "," + text3 +")"
-         replyToUser(event.replyToken, text3);
+          const text3 = "担当者にメッセージを送りました\n確認までしばらくお待ちください";
+          log = log + " ヘルプ replyToUser(" + event.replyToken + "," + text3 + ")";
         } else if (input.match('LINE ID確認メッセージ')) {
           const text2 = `あなたのUser_IDは${userId}です。`;
-          log = log + " replyToUser (" + event.replyToken + "," + text2 + ")"
+          log = log + " replyToUser(" + event.replyToken + "," + text2 + ")";
         } else if (input.match('まえのしゃしんだして')) {
-        log = log + " getPublicUrl()"
+          log = log + " getPublicUrl()";
         }
       }
     }
-    console.log(log)
+    console.log(log);
   }
 
   if (!GAS_URL) {
@@ -48,7 +47,10 @@ app.post('/webhook', async (req, res) => {
     const response = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({
+        ...req.body,
+        renderLog: log  // ← GASにlogを追加して送信
+      }),
       redirect: 'follow',
     });
     const text = await response.text();
