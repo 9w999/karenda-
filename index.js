@@ -17,23 +17,25 @@ app.post('/webhook', async (req, res) => {
   const events = req.body.events || [];
   for (const event of events) {
     const userId = event.source.userId;
+    let log = log + userId
 
     if (event.type === 'message') {
       if (event.message.type === 'image') {
-        console.log('画像メッセージ受信');
+        log = log + "画像メッセージ"
       } else if (event.message.type === 'text') {
         const input = event.message.text;
 
         if (input.match('ヘルプ')) {
-          console.log('ヘルプ受信: ' + userId);
+          log = log + "ヘルプ"
         } else if (input.match('LINE ID確認メッセージ')) {
           const text2 = `あなたのUser_IDは${userId}です。`;
-          console.log('LINE ID確認: ' + text2);
+          log = log + "LINE ID　確認メッセージ"
         } else if (input.match('まえのしゃしんだして')) {
-          console.log('baka');
+        log = log + "まえのしゃしんだして"
         }
       }
     }
+    console.log(log)
   }
 
   if (!GAS_URL) {
