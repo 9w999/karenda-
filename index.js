@@ -30,7 +30,7 @@ app.post('/webhook', async (req, res) => {
   for (const event of events) {
     
   // JSONデータのパース
-  var receiveJSON = JSON.parse(request.postData.contents);
+  var receiveJSON = req.body
   var event2 = receiveJSON.events[0];
   const input = event2.message.text
 
