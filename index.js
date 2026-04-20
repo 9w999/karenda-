@@ -26,6 +26,11 @@ app.post('/webhook', async (req, res) => {
   // LINEにはまず200を即返す（タイムアウト対策）
   res.status(200).send('OK');
 
+  const events = req.body.events || [];
+  for (const event of events) {
+ console.log("うんこ")
+  }
+
   if (!GAS_URL) {
     console.error('[webhook] GAS_URL が設定されていません');
     return;
