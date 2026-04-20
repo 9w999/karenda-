@@ -22,7 +22,7 @@ app.post('/webhook', async (req, res) => {
 
     if (event.type === 'message') {
       if (event.message.type === 'image') {
-        log = log + " replyText = processImageMessage(" + JSON.stringify(event) + "," + userId + ")";
+        log = log + " replyText = processImageMessage(" + JSON.stringify(event)[0] + "," + userId + ")";
       } else if (event.message.type === 'text') {
         const input = event.message.text;
         if (input.match('ヘルプ')) {
