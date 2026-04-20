@@ -13,7 +13,7 @@ app.post('/webhook', async (req, res) => {
   console.log('[webhook] received:', JSON.stringify(req.body));
   res.status(200).send('OK');
 
-  const events = req.body.events || [];
+  const events = req.body.events || [0];
   let log = ""; // ← ループの外に出す
 
   for (const event of events) {
