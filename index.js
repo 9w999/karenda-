@@ -22,7 +22,7 @@ app.post('/webhook', async (req, res) => {
 
     if (event.type === 'message') {
       if (event.message.type === 'image') {
-        log = log + " replyText = processImageMessage(" + JSON.stringify(event) + "," + userId + ")";
+        log = log +  "replyText" + "/" + processImageMessage" + "/" + event + "/" + userId + ")";
       } else if (event.message.type === 'text') {
         const input = event.message.text;
         if (input.match('ヘルプ')) {
@@ -37,7 +37,96 @@ app.post('/webhook', async (req, res) => {
       }
     }
     console.log(log);
+    if (log.match(processImageMessage)){
+
+      processImageMessage(event,log.split("/")[3])
   }
+    function processImageMessage(event, userId) {
+  console.log("ProcessImageMessage");
+
+  var url = 'https://api-data.line.me/v2/bot/message/' + event.message.id + '/content';
+
+  console.log( url)
+  try {
+
+    var data = UrlFetchApp.fetch(url, {
+      'headers': {
+        'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN,
+      },
+      'method': 'get'
+    });
+
+
+    console.log(data.getResponseCode())
+
+    var imgName = Number(new Date()) + '.png';
+    console.log( imgName);
+    var img = data.getBlob().getAs('image/png').setName(imgName);
+    // ... 画像のダウンロード、Blobの取得、ファイル名の設定 ...
+    var folder = DriveApp.getFolderById(GoogleDriveID);
+    var file = folder.createFile(img);
+    var fileId = file.getId();
+  }
+  catch (e) {
+    console.log("GoogleDriveエラー");
+    console.log(e.toString());
+    chatReplyText = "エラーが発生しました:E100"
+  }
+
+  console.log("DriveConnectionProcessCompleted");
+
+  // GeminiImg 関数を呼び出し、画像IDとプロンプトを渡す
+
+  if (chatReplyText == "0") {
+
+    try {
+      chatReplyText = GeminiRes(fileId, userId);////////////////////////////////////////
+    } catch (e) {
+
+      console.log("GeminiImgエラー")
+
+      if (e.name == "Exception") {
+        const e_msg = e.message
+
+        if (e_msg.includes("サーバー応答")) {
+
+          if (e_msg.includes("429")) {
+            console.log("エラー429(短時間にリクエストの送りすぎ、利用上限到達)");
+            chatReplyText = "エラーが発生しました:E211\nGeminiへのリクエストが多くなりすぎています。時間をおいて再度実行してください"
+
+          } else if (e_msg.includes("503")) {
+            console.log("Geminiのサーバーが混雑している");
+            chatReplyText = "エラーが発生しました:E212\nGeminiのサーバーが混雑しています。時間をおいて再度実行してください"
+
+          } else {
+            console.log("不明なエラー" + error);
+            chatReplyText = "エラーが発生しました:E219"
+
+          }
+        } else {
+          chatReplyText = "エラーが発生しました:E200"
+          console.log(e.name + ",E210," + e.message)
+        }
+
+      } else if (e.name == "TypeError") {
+        chatReplyText = "エラーが発生しました:E220"
+        console.log(e.message)
+
+      } else if (e.name == "ReferenceError") {
+        chatReplyText = "エラーが発生しました:E230"
+        console.log(e.name + ",E299," + e.message)
+
+      } else {
+        chatReplyText = "エラーが発生しました:E299"
+        console.log(e.name + ",E299," + e.message)
+      }
+    }
+  }
+
+  // ユーザーに応答を返信
+  replyToUser(event.replyToken, chatReplyText);
+  console.log("ReplyCompleted");
+}
 
   if (!GAS_URL) {
     console.error('[webhook] GAS_URL が設定されていません');
