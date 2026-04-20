@@ -26,12 +26,14 @@ app.post('/webhook', async (req, res) => {
         const input = event.message.text;
 
         if (input.match('ヘルプ')) {
-          log = log + "ヘルプ"
+          text3 = "担当者にメッセージを送りました\n確認までしばらくお待ちください";
+          log = log + "help(imput)" + "replyToUser(" + event.replyToken + "," + text3 +")"
+         replyToUser(event.replyToken, text3);
         } else if (input.match('LINE ID確認メッセージ')) {
           const text2 = `あなたのUser_IDは${userId}です。`;
-          log = log + "LINE ID　確認メッセージ"
+          log = log + " replyToUser (" + event.replyToken + "," + text2 + ")"
         } else if (input.match('まえのしゃしんだして')) {
-        log = log + "まえのしゃしんだして"
+        log = log + " getPublicUrl()"
         }
       }
     }
