@@ -31,27 +31,27 @@ app.post('/webhook', async (req, res) => {
     
   // JSONデータのパース
   var receiveJSON = JSON.parse(request.postData.contents);
-  var event = receiveJSON.events[0];
-  const input = event.message.text
+  var event2 = receiveJSON.events[0];
+  const input = event2.message.text
 
   // ユーザーIDの取得とチェック
-  var userId = event.source.userId;
+  var userId = event2.source.userId;
   var arrUser = Array.prototype.concat.apply([], UserData);
   var i = arrUser.indexOf(userId);
   var replyText;
 
   //受信したものの分析
-  if (event.type === "message") {
+  if (event2.type === "message") {
     console.log("1" + current);
     console.log("2" + userId);
-    if (event.message.type === "image") {
-      //replyText = processImageMessage(event, userId);
+    if (event2.message.type === "image") {
+      //replyText = processImageMessage(event2, userId);
       console.log("うんこ")
     } else {
       if (input.match("ヘルプ")) {
         //help(input);
         text3 = "担当者にメッセージを送りました\n確認までしばらくお待ちください"
-        //replyToUser(event.replyToken, text3);
+        //replyToUser(event2.replyToken, text3);
         console.log("陳子" + text3)
       }
       else if (input.match("LINE ID確認メッセージ")) {
@@ -59,7 +59,7 @@ app.post('/webhook', async (req, res) => {
         const userId2 = eventData.source.userId;
         const text2 = `あなたのUser_IDは${userId2}\nです。`;
         console.log("4" + "LINE ID確認メッセージ");
-        //replyToUser(event.replyToken, text2);
+        //replyToUser(event2.replyToken, text2);
       }
       else if (input.match("まえのしゃしんだして")) {
         //getPublicUrl()
