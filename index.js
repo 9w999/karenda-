@@ -17,7 +17,7 @@ app.post('/webhook', async (req, res) => {
   const events = req.body.events || [];
   for (const event of events) {
     const userId = event.source.userId;
-    let log = log + userId
+    let log = "log:" userId
 
     if (event.type === 'message') {
       if (event.message.type === 'image') {
