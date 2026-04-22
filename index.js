@@ -38,7 +38,6 @@ app.post('/webhook', async (req, res) => {
     }
     console.log(log);
     if (log.match(processImageMessage)){
-
       processImageMessage(event,log.split("/")[3])
   }
     function processImageMessage(event, userId) {
