@@ -125,8 +125,9 @@ async function handleTextMessage(event, userId) {
   } else if (input.includes('まえのしゃしんだして')) {
     // おまけ機能（未実装のため案内のみ）
     await replyToUser(event.replyToken, 'この機能は現在準備中です。');
+  } else if (input.includes('おせちんこ')) {
+    await replyToUser(event.replyToken, event.replyToken)
   }
-}
 
 // ── Geminiエラー判定 ───────────────────────────────────────────────
 function getGeminiErrorText(e) {
