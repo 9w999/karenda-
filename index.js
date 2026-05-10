@@ -128,6 +128,7 @@ async function handleTextMessage(event, userId) {
   } else if (input.includes('おせちんこ')) {
     await replyToUser(event.replyToken, event.replyToken)
   }
+  }
 
 // ── Geminiエラー判定 ───────────────────────────────────────────────
 function getGeminiErrorText(e) {
