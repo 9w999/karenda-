@@ -1,14 +1,13 @@
 'use strict';
 
 const axios = require('axios');
+const { getParentLineId } = require('./spreadsheet');
 
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
-// ヘルプ通知先（GASのhardcodedなUserIDと同じ値を環境変数で管理）
 const HELP_NOTIFY_USER_ID  = process.env.HELP_NOTIFY_USER_ID || '';
 
 /**
- * replyToUser(replyToken, text)
- *   LINE Reply API でユーザーにメッセージを返す
+ * LINE Reply API でユーザーにメッセージを返す
  */
 async function replyToUser(replyToken, text) {
   await axios.post(
@@ -27,8 +26,7 @@ async function replyToUser(replyToken, text) {
 }
 
 /**
- * pushToUser(userId, text)
- *   LINE Push API でユーザーにメッセージを送る
+ * LINE Push API でユーザーにメッセージを送る
  */
 async function pushToUser(userId, text) {
   await axios.post(
@@ -47,16 +45,28 @@ async function pushToUser(userId, text) {
 }
 
 /**
- * notifyHelp(input)
- *   ヘルプメッセージを管理者（HELP_NOTIFY_USER_ID）に転送する
+ * ヘルプメッセージを管理者（HELP_NOTIFY_USER_ID）に転送する
  */
 async function notifyHelp(input) {
   if (!HELP_NOTIFY_USER_ID) {
     console.warn('[notifyHelp] HELP_NOTIFY_USER_ID が設定されていません');
     return;
   }
-  const body = `ヘルプが行われました\n\n${input}`;
-  await pushToUser(HELP_NOTIFY_USER_ID, body);
+  await pushToUser(HELP_NOTIFY_USER_ID, `ヘルプが行われました\n\n${input}`);
 }
 
-module.exports = { replyToUser, pushToUser, notifyHelp };
+/**
+ * 保護者へプリント内容を通知する（GASのParentNotice相当）
+ * 保護者のLINE IDは user_status シートから取得する
+ */
+async function parentNotice(contents, userId) {
+  const parentId = await getParentLineId(userId);
+  if (!parentId) {
+    console.warn('[parentNotice] 保護者のLINE IDが見つかりません userId:', userId);
+    return;
+  }
+  const body = `生徒に次の内容の手紙が配布されました\n\n${contents}`;
+  await pushToUser(parentId, body);
+}
+
+module.exports = { replyToUser, pushToUser, notifyHelp, parentNotice };
