@@ -79,6 +79,7 @@ async function handleImageMessage(event, userId) {
       debugLog(17, imgName);
 
       const uploaded = await drive.files.create({
+        supportsAllDrives: true,
         requestBody: { name: imgName, parents: [GOOGLE_DRIVE_FOLDER_ID] },
         media: { mimeType: 'image/png', body: Readable.from(imageBuffer) },
       });
@@ -124,12 +125,6 @@ async function handleTextMessage(event, userId) {
 
   } else if (input.includes('まえのしゃしんだして')) {
     await replyToUser(event.replyToken, 'この機能は現在準備中です。');
-    
-  } else if (input.includes('おまたくにくに...凄いです')) {
-    await replyToUser(event.replyToken, '奥多摩すごい国ですに...');
-    
-  }　else if (input.includes('あ')) {
-    await replyToUser(event.replyToken, `An unexpected error occurred. Poop destroys server system and code has gone. All data has been broken.(Error Code: 334)`);
   }
 }
 
