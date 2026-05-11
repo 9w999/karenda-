@@ -20,7 +20,7 @@ async function getImageBase64FromDrive(fileId) {
   });
   const drive = google.drive({ version: 'v3', auth });
   const res = await drive.files.get(
-    { fileId, alt: 'media' },
+    { fileId, alt: 'media', supportsAllDrives: true },
     { responseType: 'arraybuffer' }
   );
   return Buffer.from(res.data).toString('base64');
@@ -36,7 +36,7 @@ async function trashDriveFile(fileId) {
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
     const drive = google.drive({ version: 'v3', auth });
-    await drive.files.update({ fileId, requestBody: { trashed: true } });
+    await drive.files.update({ fileId, supportsAllDrives: true, requestBody: { trashed: true } });
   } catch (e) {
     console.error('[trashDriveFile] エラー:', e.message);
   }
