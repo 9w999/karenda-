@@ -2,21 +2,18 @@
  
 const express = require('express');
 const axios   = require('axios');
-const { google } = require('googleapis');
-const { Readable } = require('stream');
 const cron = require('node-cron');
  
-const { debugLog }           = require('./src/logger');
+const { debugLog }            = require('./src/logger');
 const { replyToUser, notifyHelp } = require('./src/line');
-const { geminiRes }          = require('./src/gemini');
-const { checkNotification }  = require('./src/remind');
+const { geminiRes }           = require('./src/gemini');
+const { checkNotification }   = require('./src/remind');
  
 const app = express();
 app.use(express.json());
  
-const PORT                   = process.env.PORT || 3000;
-const CHANNEL_ACCESS_TOKEN   = process.env.CHANNEL_ACCESS_TOKEN;
-const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
+const PORT                 = process.env.PORT || 3000;
+const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
  
 // ── ヘルスチェック ──────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('LINE Bot Server is running.'));
@@ -26,7 +23,6 @@ app.post('/webhook', async (req, res) => {
   debugLog(0);
   console.log('[webhook] received:', JSON.stringify(req.body));
  
-  // LINEには即200を返す（タイムアウト防止）
   res.status(200).send('OK');
  
   const events = req.body.events || [];
@@ -50,7 +46,6 @@ app.post('/webhook', async (req, res) => {
 async function handleImageMessage(event, userId) {
   debugLog(4, 'ProcessImageMessage');
   let chatReplyText = '0';
-  let fileId;
  
   // ① LINE から画像をダウンロード
   const imageUrl = `https://api-data.line.me/v2/bot/message/${event.message.id}/content`;
@@ -67,42 +62,17 @@ async function handleImageMessage(event, userId) {
     chatReplyText = 'エラーが発生しました:E100';
   }
  
-  // ② Google Drive にアップロード
+  // ② Gemini 解析 → カレンダー登録 → 保護者通知（Drive不要、バッファ直接渡し）
   if (chatReplyText === '0' && imageBuffer) {
     try {
-      const auth = new google.auth.GoogleAuth({
-        credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
-        scopes: ['https://www.googleapis.com/auth/drive'],
-      });
-      const drive   = google.drive({ version: 'v3', auth });
-      const imgName = `${Date.now()}.png`;
-      debugLog(17, imgName);
- 
-      const uploaded = await drive.files.create({
-        supportsAllDrives: true,
-        requestBody: { name: imgName },
-        media: { mimeType: 'image/png', body: Readable.from(imageBuffer) },
-      });
-      fileId = uploaded.data.id;
-      debugLog(4, 'DriveConnectionProcessCompleted');
-    } catch (e) {
-      debugLog(8, 'GoogleDriveエラー');
-      debugLog(25, e.toString());
-      chatReplyText = 'エラーが発生しました:E100';
-    }
-  }
- 
-  // ③ Gemini 解析 → カレンダー登録 → 保護者通知
-  if (chatReplyText === '0' && fileId) {
-    try {
-      chatReplyText = await geminiRes(fileId, userId);
+      chatReplyText = await geminiRes(imageBuffer, userId);
     } catch (e) {
       debugLog(8, 'GeminiImgエラー');
       chatReplyText = getGeminiErrorText(e);
     }
   }
  
-  // ④ LINE へ返信
+  // ③ LINE へ返信
   try {
     await replyToUser(event.replyToken, chatReplyText);
     debugLog(7, 'ReplyCompleted');
@@ -161,3 +131,4 @@ cron.schedule('0,30 * * * *', async () => {
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+ 
