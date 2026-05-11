@@ -124,6 +124,9 @@ async function handleTextMessage(event, userId) {
 
   } else if (input.includes('まえのしゃしんだして')) {
     await replyToUser(event.replyToken, 'この機能は現在準備中です。');
+    
+  } else if (input.includes('おまたくにくに...凄いです')) {
+    await replyToUser(event.replyToken, '奥多摩すごい国ですに...');
   }
 }
 
