@@ -130,6 +130,7 @@ async function handleTextMessage(event, userId) {
     
   }　else if (input.includes('あ')) {
     await replyToUser(event.replyToken, `An unexpected error occurred. Poop destroys server system and code has gone. All data has been broken.(Error Code: 334)`);
+  }
 }
 
 // ── Geminiエラー判定 ───────────────────────────────────────────────
