@@ -116,34 +116,37 @@ async function addCalendar(geminiReply, userId) {
 }
 
 /**
- * "YYYY/MM/DD/HH/mm" または "YYYY/MM/DD/HHmm" → Date
+ * "YYYY/MM/DD/HH/mm" または "YYYY/MM/DD/HHmm" → Date (JST)
  */
 function parseDateStr(str) {
   if (!str) return null;
   const parts = str.split('/');
+  let year, month, day, hour, minute;
   if (parts.length === 5) {
-    // YYYY/MM/DD/HH/mm
-    const [year, month, day, hour, minute] = parts.map(Number);
-    return new Date(year, month - 1, day, hour, minute);
+    [year, month, day, hour, minute] = parts.map(Number);
   } else if (parts.length === 4) {
-    // YYYY/MM/DD/HHmm
-    const [year, month, day, hhmm] = parts;
-    const hour   = Math.floor(Number(hhmm) / 100);
-    const minute = Number(hhmm) % 100;
-    return new Date(Number(year), Number(month) - 1, Number(day), hour, minute);
+    const hhmm = parts[3];
+    year   = Number(parts[0]);
+    month  = Number(parts[1]);
+    day    = Number(parts[2]);
+    hour   = Math.floor(Number(hhmm) / 100);
+    minute = Number(hhmm) % 100;
+  } else {
+    return null;
   }
-  return null;
+  // JSTとして解釈（UTC+9）
+  return new Date(Date.UTC(year, month - 1, day, hour - 9, minute));
 }
 
 /**
- * "YYYY/MM/DD" → Date（終日用）
+ * "YYYY/MM/DD" → Date（終日用・JST）
  */
 function parseDateStrAllDay(str) {
   if (!str) return null;
   const parts = str.split('/');
   if (parts.length < 3) return null;
   const [year, month, day] = parts.map(Number);
-  return new Date(year, month - 1, day);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 module.exports = { addCalendar };
