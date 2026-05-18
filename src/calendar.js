@@ -116,14 +116,23 @@ async function addCalendar(geminiReply, userId) {
 }
 
 /**
- * "YYYY/MM/DD/HH/mm" → Date
+ * "YYYY/MM/DD/HH/mm" または "YYYY/MM/DD/HHmm" → Date
  */
 function parseDateStr(str) {
   if (!str) return null;
   const parts = str.split('/');
-  if (parts.length < 5) return null;
-  const [year, month, day, hour, minute] = parts.map(Number);
-  return new Date(year, month - 1, day, hour, minute);
+  if (parts.length === 5) {
+    // YYYY/MM/DD/HH/mm
+    const [year, month, day, hour, minute] = parts.map(Number);
+    return new Date(year, month - 1, day, hour, minute);
+  } else if (parts.length === 4) {
+    // YYYY/MM/DD/HHmm
+    const [year, month, day, hhmm] = parts;
+    const hour   = Math.floor(Number(hhmm) / 100);
+    const minute = Number(hhmm) % 100;
+    return new Date(Number(year), Number(month) - 1, Number(day), hour, minute);
+  }
+  return null;
 }
 
 /**
