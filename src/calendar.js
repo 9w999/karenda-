@@ -24,13 +24,13 @@ async function addEvent(cal, calId, title, start, end, type) {
   if (!calId) return;
   try {
     if (type === 'allday') {
-      const dateStr = start.toISOString().split('T')[0];
+      // start は "YYYY-MM-DD" 文字列
       await cal.events.insert({
         calendarId: calId,
         requestBody: {
           summary: title,
-          start: { date: dateStr },
-          end: { date: dateStr },
+          start: { date: start },
+          end:   { date: start },
         },
       });
     } else {
@@ -38,8 +38,8 @@ async function addEvent(cal, calId, title, start, end, type) {
         calendarId: calId,
         requestBody: {
           summary: title,
-          start: { dateTime: start.toISOString() },
-          end: { dateTime: end.toISOString() },
+          start: { dateTime: start.toISOString(), timeZone: 'Asia/Tokyo' },
+          end:   { dateTime: end.toISOString(),   timeZone: 'Asia/Tokyo' },
         },
       });
     }
@@ -100,9 +100,15 @@ async function addCalendar(geminiReply, userId) {
       const endDate   = parseDateStr(endStr);
       if (!startDate || !endDate) continue;
 
-      const type = startStr === endStr ? 'allday' : 'timed';
-      await addEvent(cal, calId1, title, startDate, endDate, type);
-      if (calId2) await addEvent(cal, calId2, title, startDate, endDate, type);
+      // 開始・終了が同じ → 終日イベント
+      if (startStr === endStr || (isZeroTime(startStr) && isZeroTime(endStr))) {
+        const allDayDate = parseDateStrAllDay(startStr);
+        await addEvent(cal, calId1, title, allDayDate, null, 'allday');
+        if (calId2) await addEvent(cal, calId2, title, allDayDate, null, 'allday');
+      } else {
+        await addEvent(cal, calId1, title, startDate, endDate, 'timed');
+        if (calId2) await addEvent(cal, calId2, title, startDate, endDate, 'timed');
+      }
     } else {
       // 終日
       const startDate = parseDateStrAllDay(dateStr);
@@ -113,6 +119,16 @@ async function addCalendar(geminiReply, userId) {
   }
 
   debugLog(8, 'カレンダー追加完了');
+}
+
+/**
+ * 時刻部分が 00/00 または 0000 かどうか判定
+ */
+function isZeroTime(str) {
+  const parts = str.split('/');
+  if (parts.length === 5) return parts[3] === '00' && parts[4] === '00';
+  if (parts.length === 4) return parts[3] === '0000' || parts[3] === '00';
+  return true;
 }
 
 /**
@@ -134,19 +150,20 @@ function parseDateStr(str) {
   } else {
     return null;
   }
-  // JSTとして解釈（UTC+9）
   return new Date(Date.UTC(year, month - 1, day, hour - 9, minute));
 }
 
 /**
- * "YYYY/MM/DD" → Date（終日用・JST）
+ * 終日イベント用: "YYYY/MM/DD/..." → "YYYY-MM-DD" 文字列をそのまま返す
  */
 function parseDateStrAllDay(str) {
   if (!str) return null;
   const parts = str.split('/');
   if (parts.length < 3) return null;
-  const [year, month, day] = parts.map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
+  const year  = parts[0].padStart(4, '0');
+  const month = parts[1].padStart(2, '0');
+  const day   = parts[2].padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 module.exports = { addCalendar };
