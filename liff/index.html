@@ -193,7 +193,7 @@
     }
     #confirm-screen.active { display: flex; }
     #confirm-img {
-      flex: 1; object-fit: contain; width: 100%;
+      flex: 1; object-fit: contain; width: 100%; height: 0;
     }
     .confirm-actions {
       background: #111;
@@ -298,10 +298,10 @@
     <div class="cam-icon">📷</div>
     <p>プリントの写真を送ってください</p>
     <button class="cam-btn" onclick="document.getElementById('file-input').click()">
-      📁 ファイルから選ぶ
+      🖼️ 写真ライブラリから選ぶ
     </button>
     <button class="cam-btn" style="background:#4A8B60" onclick="document.getElementById('camera-input').click()">
-      📷 カメラで撮影
+      📷 カメラで撮影する
     </button>
     <input type="file" id="file-input" accept="image/*">
     <input type="file" id="camera-input" accept="image/*" capture="environment">
