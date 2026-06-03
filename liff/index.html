@@ -364,10 +364,24 @@
 
   // すぐに画面を表示
   document.addEventListener('DOMContentLoaded', () => {
-    hideLoading();
     const now = new Date();
     calYear  = now.getFullYear();
     calMonth = now.getMonth();
+
+    // ナビボタンのイベント登録
+    document.getElementById('cal-prev').onclick = () => {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    };
+    document.getElementById('cal-next').onclick = () => {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    };
+    document.getElementById('file-input').addEventListener('change', handleFileSelect);
+    document.getElementById('camera-input').addEventListener('change', handleFileSelect);
+
     renderCalendar();
     renderTimeline();
     initLiff();
@@ -505,17 +519,6 @@
     });
   }
 
-  document.getElementById('cal-prev').onclick = () => {
-    calMonth--;
-    if (calMonth < 0) { calMonth = 11; calYear--; }
-    renderCalendar();
-  };
-  document.getElementById('cal-next').onclick = () => {
-    calMonth++;
-    if (calMonth > 11) { calMonth = 0; calYear++; }
-    renderCalendar();
-  };
-
   // ── タイムライン描画 ──────────────────────────
   function renderTimeline() {
     const tl = document.getElementById('timeline');
@@ -524,9 +527,6 @@
   }
 
   // ── カメラ・画像選択 ──────────────────────────
-  document.getElementById('file-input').addEventListener('change', handleFileSelect);
-  document.getElementById('camera-input').addEventListener('change', handleFileSelect);
-
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -534,8 +534,8 @@
     const url = URL.createObjectURL(file);
     document.getElementById('confirm-img').src = url;
     document.getElementById('confirm-screen').classList.add('active');
-    this.value = '';
-  });
+    e.target.value = '';
+  }
 
   function cancelConfirm() {
     document.getElementById('confirm-screen').classList.remove('active');
