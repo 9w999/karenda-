@@ -358,15 +358,6 @@
   let events = []; // { name, start, end, allDay }
 
   // ── LIFF初期化 ──────────────────────────
-  // まず画面を表示してからLIFF初期化
-  hideLoading();
-  const now = new Date();
-  calYear  = now.getFullYear();
-  calMonth = now.getMonth();
-  renderCalendar();
-  renderTimeline();
-
-  // LIFF初期化（バックグラウンドで）
   async function initLiff() {
     try {
       await liff.init({ liffId: LIFF_ID });
@@ -378,6 +369,17 @@
       console.error('LIFF初期化エラー:', e);
     }
   }
+
+  // すぐに画面を表示
+  document.addEventListener('DOMContentLoaded', () => {
+    hideLoading();
+    const now = new Date();
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar();
+    renderTimeline();
+    initLiff();
+  });
 
   function hideLoading() {
     document.getElementById('loading').classList.add('hidden');
@@ -598,7 +600,6 @@
   }
 
   // ── 起動 ──────────────────────────
-  initLiff();
 </script>
 </body>
 </html>
