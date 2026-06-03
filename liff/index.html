@@ -295,16 +295,13 @@
 <!-- カメラ画面 -->
 <div id="screen-camera" class="screen">
   <div class="cam-select-wrap">
-    <div class="cam-icon">📷</div>
+    <div class="cam-icon">📄</div>
     <p>プリントの写真を送ってください</p>
     <button class="cam-btn" onclick="document.getElementById('file-input').click()">
-      🖼️ 写真ライブラリから選ぶ
-    </button>
-    <button class="cam-btn" style="background:#4A8B60" onclick="document.getElementById('camera-input').click()">
-      📷 カメラで撮影する
+      📎 写真を選択
     </button>
     <input type="file" id="file-input" accept="image/*">
-    <input type="file" id="camera-input" accept="image/*" capture="environment">
+    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
   </div>
 </div>
 
