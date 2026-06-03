@@ -1,39 +1,53 @@
-'use strict';
-
 const express = require('express');
 const axios   = require('axios');
 const cron = require('node-cron');
-
+const multer = require('multer');
+ 
 const { debugLog }            = require('./src/logger');
 const { replyToUser, notifyHelp } = require('./src/line');
 const { geminiRes }           = require('./src/gemini');
 const { checkNotification }   = require('./src/remind');
-
-const app = express();
+const { getCalendarIds }      = require('./src/spreadsheet');
+const { google }              = require('googleapis');
+ 
+const path   = require('path');
+ 
+const app    = express();
+const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json());
-
+ 
+// LIFF静的ファイル配信
+app.use('/liff', express.static(path.join(__dirname, 'liff')));
+ 
+// LIFF からのアクセスを許可
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+ 
 const PORT                 = process.env.PORT || 3000;
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
-
+ 
 // ── ヘルスチェック ──────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('LINE Bot Server is running.'));
-
+ 
 // ── LINE Webhook ────────────────────────────────────────────────────
 app.post('/webhook', async (req, res) => {
   debugLog(0);
   console.log('[webhook] received:', JSON.stringify(req.body));
-
+ 
   res.status(200).send('OK');
-
+ 
   const events = req.body.events || [];
-
+ 
   for (const event of events) {
     const userId = event.source?.userId;
     debugLog(1, new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }));
     debugLog(2, userId);
-
+ 
     if (event.type !== 'message') continue;
-
+ 
     if (event.message.type === 'image') {
       await handleImageMessage(event, userId);
     } else if (event.message.type === 'text') {
@@ -41,12 +55,12 @@ app.post('/webhook', async (req, res) => {
     }
   }
 });
-
+ 
 // ── 画像メッセージ処理 ──────────────────────────────────────────────
 async function handleImageMessage(event, userId) {
   debugLog(4, 'ProcessImageMessage');
   let chatReplyText = '0';
-
+ 
   // ① LINE から画像をダウンロード
   const imageUrl = `https://api-data.line.me/v2/bot/message/${event.message.id}/content`;
   let imageBuffer;
@@ -61,7 +75,7 @@ async function handleImageMessage(event, userId) {
     console.error('[画像取得エラー]', e.message);
     chatReplyText = 'エラーが発生しました:E100';
   }
-
+ 
   // ② Gemini 解析 → カレンダー登録 → 保護者通知（Drive不要、バッファ直接渡し）
   if (chatReplyText === '0' && imageBuffer) {
     try {
@@ -71,7 +85,7 @@ async function handleImageMessage(event, userId) {
       chatReplyText = getGeminiErrorText(e);
     }
   }
-
+ 
   // ③ LINE へ返信
   try {
     await replyToUser(event.replyToken, chatReplyText);
@@ -80,24 +94,24 @@ async function handleImageMessage(event, userId) {
     console.error('[返信エラー]', e.message);
   }
 }
-
+ 
 // ── テキストメッセージ処理 ─────────────────────────────────────────
 async function handleTextMessage(event, userId) {
   const input = event.message.text;
-
+ 
   if (input.includes('ヘルプ')) {
     await notifyHelp(input);
     await replyToUser(event.replyToken, '担当者にメッセージを送りました\n確認までしばらくお待ちください');
-
+ 
   } else if (input.includes('LINE ID確認メッセージ')) {
     debugLog(4, 'LINE ID確認メッセージ');
     await replyToUser(event.replyToken, `あなたのUser_IDは${userId}\nです。`);
-
+ 
   } else if (input.includes('まえのしゃしんだして')) {
     await replyToUser(event.replyToken, 'この機能は現在準備中です。');
   }
 }
-
+ 
 // ── Geminiエラー判定 ───────────────────────────────────────────────
 function getGeminiErrorText(e) {
   const status = e.response?.status;
@@ -119,7 +133,65 @@ function getGeminiErrorText(e) {
   debugLog(25, 'E299: ' + e.name + ' / ' + e.message);
   return 'エラーが発生しました:E299';
 }
-
+ 
+// ── LIFF: 画像アップロード ──────────────────────────────────────────
+app.post('/upload', upload.single('image'), async (req, res) => {
+  const userId = req.body.userId;
+  if (!userId || !req.file) {
+    return res.status(400).json({ error: 'userId と image が必要です' });
+  }
+  try {
+    const replyText = await geminiRes(req.file.buffer, userId);
+    res.json({ ok: true, message: replyText });
+  } catch (e) {
+    console.error('[/upload] エラー:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+ 
+// ── LIFF: カレンダーイベント取得 ───────────────────────────────────
+app.get('/events', async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: 'userId が必要です' });
+ 
+  try {
+    const { studentCal, parentCal } = await getCalendarIds(userId);
+    const calId = studentCal || parentCal;
+    if (!calId) return res.json([]);
+ 
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
+      scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
+    });
+    const cal = google.calendar({ version: 'v3', auth });
+ 
+    const now   = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end   = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
+ 
+    const result = await cal.events.list({
+      calendarId: calId,
+      timeMin: start,
+      timeMax: end,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 100,
+    });
+ 
+    const items = (result.data.items || []).map(ev => ({
+      name:   ev.summary || '（無題）',
+      start:  ev.start.dateTime || ev.start.date,
+      end:    ev.end.dateTime   || ev.end.date,
+      allDay: !!ev.start.date,
+    }));
+ 
+    res.json(items);
+  } catch (e) {
+    console.error('[/events] エラー:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+ 
 // ── 予定リマインド cron（毎時0分・30分に実行） ──────────────────────
 cron.schedule('0,30 * * * *', async () => {
   console.log('[cron] CheckNotification 実行');
@@ -129,8 +201,9 @@ cron.schedule('0,30 * * * *', async () => {
     console.error('[cron] エラー:', e.message);
   }
 }, { timezone: 'Asia/Tokyo' });
-
+ 
 // ── サーバー起動 ────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+ 
