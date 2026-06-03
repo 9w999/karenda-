@@ -20,7 +20,7 @@
       --border: #E0DDD6;
       --shadow: 0 2px 12px rgba(0,0,0,0.08);
       --radius: 16px;
-      --nav-h: 64px;
+      --nav-h: 80px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -79,13 +79,13 @@
       flex: 1; border: none; background: none;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 4px; cursor: pointer;
+      gap: 6px; cursor: pointer;
       color: var(--text-sub);
       font-family: inherit;
-      font-size: 10px;
+      font-size: 12px;
       transition: color 0.15s;
     }
-    nav button .icon { font-size: 22px; }
+    nav button .icon { font-size: 28px; }
     nav button.active { color: var(--primary); }
     nav button.active .icon { transform: scale(1.1); }
 
@@ -306,9 +306,13 @@
     <div class="cam-icon">📷</div>
     <p>プリントの写真を送ってください</p>
     <button class="cam-btn" onclick="document.getElementById('file-input').click()">
-      📁 写真を選ぶ / 撮影
+      📁 ファイルから選ぶ
     </button>
-    <input type="file" id="file-input" accept="image/*" capture="environment">
+    <button class="cam-btn" style="background:#4A8B60" onclick="document.getElementById('camera-input').click()">
+      📷 カメラで撮影
+    </button>
+    <input type="file" id="file-input" accept="image/*">
+    <input type="file" id="camera-input" accept="image/*" capture="environment">
   </div>
 </div>
 
@@ -523,7 +527,10 @@
   }
 
   // ── カメラ・画像選択 ──────────────────────────
-  document.getElementById('file-input').addEventListener('change', function(e) {
+  document.getElementById('file-input').addEventListener('change', handleFileSelect);
+  document.getElementById('camera-input').addEventListener('change', handleFileSelect);
+
+  function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
     pendingImageBlob = file;
