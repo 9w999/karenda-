@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
-
+ 
     :root {
       --bg: #F5F3EE;
       --surface: #FFFFFF;
@@ -22,9 +22,9 @@
       --radius: 16px;
       --nav-h: 80px;
     }
-
+ 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
+ 
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: var(--bg);
@@ -32,7 +32,7 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
+ 
     /* ── ローディング ── */
     #loading {
       position: fixed; inset: 0;
@@ -45,7 +45,7 @@
     #loading .logo { font-size: 48px; margin-bottom: 12px; }
     #loading p { color: #fff; font-size: 14px; opacity: 0.8; }
     #loading.hidden { opacity: 0; pointer-events: none; }
-
+ 
     /* ── 画面共通 ── */
     .screen {
       display: none;
@@ -55,7 +55,7 @@
     }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
+ 
     /* ── ヘッダー ── */
     .header {
       background: var(--surface);
@@ -65,7 +65,7 @@
     }
     .header h1 { font-size: 20px; font-weight: 700; color: var(--primary); }
     .header p  { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-
+ 
     /* ── ボトムナビ ── */
     nav {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -88,7 +88,7 @@
     nav button .icon { font-size: 28px; }
     nav button.active { color: var(--primary); }
     nav button.active .icon { transform: scale(1.1); }
-
+ 
     /* ── カレンダー画面 ── */
     .cal-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -133,7 +133,7 @@
     .day-num { font-size: 13px; font-weight: 500; line-height: 1; }
     .dot-row { display: flex; gap: 2px; margin-top: 3px; }
     .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
-
+ 
     /* 予定リスト */
     .event-list { padding: 0 16px 8px; }
     .event-list h3 {
@@ -156,7 +156,7 @@
       min-width: 72px;
     }
     .event-card .event-name { font-size: 14px; font-weight: 500; }
-
+ 
     /* ── タイムライン画面 ── */
     .timeline { padding: 12px 16px; }
     .tl-item {
@@ -182,7 +182,7 @@
     .tl-body .tl-time { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
     .tl-body .tl-text { font-size: 14px; line-height: 1.6; }
     .tl-empty { text-align: center; color: var(--text-sub); padding: 48px 0; font-size: 14px; }
-
+ 
     /* ── カメラ画面 ── */
     #screen-camera { background: #111; min-height: 100vh; }
     #screen-camera .cam-header {
@@ -192,7 +192,7 @@
       z-index: 5;
     }
     #screen-camera .cam-header h1 { color: #fff; font-size: 18px; font-weight: 700; }
-
+ 
     /* ── 確認画面 ── */
     #confirm-screen {
       display: none; position: fixed; inset: 0;
@@ -219,7 +219,7 @@
     .btn-secondary { background: #333; color: #fff; }
     .btn-primary   { background: var(--primary); color: #fff; }
     .btn-danger    { background: var(--danger); color: #fff; }
-
+ 
     /* ファイル選択ボタン */
     .cam-select-wrap {
       display: flex; flex-direction: column;
@@ -236,7 +236,7 @@
       cursor: pointer; display: flex; align-items: center; gap: 8px;
     }
     #file-input { display: none; }
-
+ 
     /* 送信中オーバーレイ */
     #sending-overlay {
       display: none; position: fixed; inset: 0;
@@ -254,7 +254,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #sending-overlay p { color: #fff; font-size: 15px; }
-
+ 
     /* トースト */
     #toast {
       position: fixed; bottom: 80px; left: 50%;
@@ -269,13 +269,13 @@
   </style>
 </head>
 <body>
-
+ 
 <!-- ローディング -->
 <div id="loading">
   <div class="logo">📚</div>
   <p>読み込み中...</p>
 </div>
-
+ 
 <!-- カレンダー画面 -->
 <div id="screen-calendar" class="screen active">
   <div class="header">
@@ -290,7 +290,7 @@
   <div class="cal-grid" id="cal-grid"></div>
   <div class="event-list" id="event-list"></div>
 </div>
-
+ 
 <!-- タイムライン画面 -->
 <div id="screen-timeline" class="screen">
   <div class="header">
@@ -299,7 +299,7 @@
   </div>
   <div class="timeline" id="timeline"></div>
 </div>
-
+ 
 <!-- カメラ画面 -->
 <div id="screen-camera" class="screen">
   <div class="cam-select-wrap">
@@ -315,7 +315,7 @@
     <input type="file" id="camera-input" accept="image/*" capture="environment">
   </div>
 </div>
-
+ 
 <!-- 確認画面 -->
 <div id="confirm-screen">
   <img id="confirm-img" src="" alt="確認画像">
@@ -324,16 +324,16 @@
     <button class="btn btn-primary"   onclick="sendImage()">送信 →</button>
   </div>
 </div>
-
+ 
 <!-- 送信中オーバーレイ -->
 <div id="sending-overlay">
   <div class="spinner"></div>
   <p id="sending-text">解析中...</p>
 </div>
-
+ 
 <!-- トースト -->
 <div id="toast"></div>
-
+ 
 <!-- ボトムナビ -->
 <nav>
   <button class="nav-btn-item active" onclick="showScreen('calendar')" id="nav-calendar">
@@ -346,17 +346,17 @@
     <span class="icon">📷</span>カメラ
   </button>
 </nav>
-
+ 
 <script>
   const SERVER_URL = 'https://kadaikenkyu.onrender.com';
   const LIFF_ID    = '2010280417-Py5foEYM';
-
+ 
   let liffProfile = null;
   let calYear, calMonth;
   let selectedDate = null;
   let pendingImageBlob = null;
   let events = []; // { name, start, end, allDay }
-
+ 
   // ── LIFF初期化 ──────────────────────────
   async function initLiff() {
     try {
@@ -369,7 +369,7 @@
       console.error('LIFF初期化エラー:', e);
     }
   }
-
+ 
   // すぐに画面を表示
   document.addEventListener('DOMContentLoaded', () => {
     hideLoading();
@@ -380,11 +380,11 @@
     renderTimeline();
     initLiff();
   });
-
+ 
   function hideLoading() {
     document.getElementById('loading').classList.add('hidden');
   }
-
+ 
   // ── 画面切替 ──────────────────────────
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -392,7 +392,7 @@
     document.getElementById('screen-' + name).classList.add('active');
     document.getElementById('nav-' + name).classList.add('active');
   }
-
+ 
   // ── イベント取得 ──────────────────────────
   async function loadEvents() {
     if (!liffProfile) return;
@@ -407,15 +407,15 @@
       events = [];
     }
   }
-
+ 
   // ── カレンダー描画 ──────────────────────────
   function renderCalendar() {
     const title = `${calYear}年 ${calMonth + 1}月`;
     document.getElementById('cal-title').textContent = title;
-
+ 
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
-
+ 
     // 曜日ヘッダー
     ['日','月','火','水','木','金','土'].forEach(d => {
       const el = document.createElement('div');
@@ -423,12 +423,12 @@
       el.textContent = d;
       grid.appendChild(el);
     });
-
+ 
     const first   = new Date(calYear, calMonth, 1).getDay();
     const days    = new Date(calYear, calMonth + 1, 0).getDate();
     const prevDays = new Date(calYear, calMonth, 0).getDate();
     const today   = new Date();
-
+ 
     // 前月の日
     for (let i = first - 1; i >= 0; i--) {
       grid.appendChild(makeCell(calYear, calMonth - 1, prevDays - i, true));
@@ -443,10 +443,10 @@
     for (let d = 1; d <= remain; d++) {
       grid.appendChild(makeCell(calYear, calMonth + 1, d, true));
     }
-
+ 
     renderEventList(selectedDate);
   }
-
+ 
   function makeCell(y, m, d, other) {
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
@@ -459,12 +459,12 @@
     if (y === today.getFullYear() && m === today.getMonth() && d === today.getDate()) {
       cell.classList.add('today');
     }
-
+ 
     const num = document.createElement('div');
     num.className = 'day-num';
     num.textContent = d;
     cell.appendChild(num);
-
+ 
     // その日のイベント数をドットで表示
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayEvents = events.filter(e => e.start.startsWith(dateStr));
@@ -478,27 +478,27 @@
       });
       cell.appendChild(dots);
     }
-
+ 
     cell.addEventListener('click', () => {
       selectedDate = dateStr;
       renderEventList(dateStr);
     });
     return cell;
   }
-
+ 
   function renderEventList(dateStr) {
     const list = document.getElementById('event-list');
     const filtered = dateStr
       ? events.filter(e => e.start.startsWith(dateStr))
       : events.slice(0, 10);
-
+ 
     if (filtered.length === 0) {
       list.innerHTML = dateStr
         ? `<h3>${dateStr} の予定はありません</h3>`
         : '';
       return;
     }
-
+ 
     const label = dateStr || '予定一覧';
     list.innerHTML = `<h3>${label}</h3>`;
     filtered.forEach(ev => {
@@ -512,7 +512,7 @@
       list.appendChild(card);
     });
   }
-
+ 
   document.getElementById('cal-prev').onclick = () => {
     calMonth--;
     if (calMonth < 0) { calMonth = 11; calYear--; }
@@ -523,18 +523,18 @@
     if (calMonth > 11) { calMonth = 0; calYear++; }
     renderCalendar();
   };
-
+ 
   // ── タイムライン描画 ──────────────────────────
   function renderTimeline() {
     const tl = document.getElementById('timeline');
     // サーバーから通知履歴を取得できる場合はここに追加
     tl.innerHTML = `<div class="tl-empty">📭 通知履歴はまだありません</div>`;
   }
-
+ 
   // ── カメラ・画像選択 ──────────────────────────
   document.getElementById('file-input').addEventListener('change', handleFileSelect);
   document.getElementById('camera-input').addEventListener('change', handleFileSelect);
-
+ 
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -544,46 +544,46 @@
     document.getElementById('confirm-screen').classList.add('active');
     this.value = '';
   });
-
+ 
   function cancelConfirm() {
     document.getElementById('confirm-screen').classList.remove('active');
     pendingImageBlob = null;
   }
-
+ 
   async function sendImage() {
     if (!pendingImageBlob || !liffProfile) return;
     document.getElementById('confirm-screen').classList.remove('active');
     showSending('画像を解析中...');
-
+ 
     try {
       const formData = new FormData();
       formData.append('image', pendingImageBlob);
       formData.append('userId', liffProfile.userId);
-
+ 
       const res = await fetch(`${SERVER_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
-
+ 
       if (!res.ok) throw new Error('サーバーエラー');
       const data = await res.json();
-
+ 
       hideSending();
       showToast('✅ カレンダーに追加しました');
       pendingImageBlob = null;
-
+ 
       // カレンダーを更新
       await loadEvents();
       renderCalendar();
       showScreen('calendar');
-
+ 
     } catch (e) {
       hideSending();
       showToast('❌ エラーが発生しました');
       console.error(e);
     }
   }
-
+ 
   function showSending(text) {
     document.getElementById('sending-text').textContent = text;
     document.getElementById('sending-overlay').classList.add('active');
@@ -591,15 +591,16 @@
   function hideSending() {
     document.getElementById('sending-overlay').classList.remove('active');
   }
-
+ 
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2800);
   }
-
+ 
   // ── 起動 ──────────────────────────
 </script>
 </body>
 </html>
+ 
