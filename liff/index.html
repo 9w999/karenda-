@@ -363,17 +363,16 @@
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) { liff.login(); return; }
       liffProfile = await liff.getProfile();
-      hideLoading();
-      const now = new Date();
-      calYear  = now.getFullYear();
-      calMonth = now.getMonth();
-      await loadEvents();
-      renderCalendar();
-      renderTimeline();
     } catch (e) {
-      console.error(e);
-      hideLoading();
+      console.error('LIFF初期化エラー:', e);
     }
+    hideLoading();
+    const now = new Date();
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    await loadEvents();
+    renderCalendar();
+    renderTimeline();
   }
 
   function hideLoading() {
