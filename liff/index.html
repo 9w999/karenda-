@@ -176,14 +176,7 @@
     .tl-empty { text-align: center; color: var(--text-sub); padding: 48px 0; font-size: 14px; }
 
     /* ── カメラ画面 ── */
-    #screen-camera { background: #111; min-height: 100vh; }
-    #screen-camera .cam-header {
-      padding: 16px 20px;
-      background: rgba(0,0,0,0.6);
-      position: absolute; top: 0; left: 0; right: 0;
-      z-index: 5;
-    }
-    #screen-camera .cam-header h1 { color: #fff; font-size: 18px; font-weight: 700; }
+    #screen-camera { background: var(--bg); min-height: 100vh; }
 
     /* ── 確認画面 ── */
     #confirm-screen {
@@ -216,18 +209,32 @@
     .cam-select-wrap {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      height: 100vh; gap: 20px;
+      height: calc(100vh - var(--nav-h));
+      gap: 20px; padding: 24px;
     }
-    .cam-icon { font-size: 64px; opacity: 0.4; }
-    .cam-select-wrap p { color: #aaa; font-size: 14px; }
+    .cam-doc-icon {
+      width: 90px; height: 110px;
+      background: var(--surface);
+      border-radius: 12px 12px 12px 12px;
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px;
+      border: 2px dashed var(--border);
+      margin-bottom: 4px;
+      position: relative;
+    }
+    .cam-select-wrap h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+    .cam-select-wrap > p { color: var(--text-sub); font-size: 13px; text-align: center; }
     .cam-btn {
+      width: 100%;
       background: var(--primary); color: #fff;
       border: none; border-radius: 14px;
       padding: 16px 32px; font-size: 16px;
       font-family: inherit; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 8px;
     }
-    #file-input { display: none; }
+    #file-input, #camera-input { display: none; }
 
     /* 送信中オーバーレイ */
     #sending-overlay {
@@ -294,14 +301,19 @@
 
 <!-- カメラ画面 -->
 <div id="screen-camera" class="screen">
+  <div class="header">
+    <h1>📄 プリントを送る</h1>
+    <p>写真を撮影またはライブラリから選択</p>
+  </div>
   <div class="cam-select-wrap">
-    <div class="cam-icon">📄</div>
-    <p>プリントの写真を送ってください</p>
+    <div class="cam-doc-icon">📄</div>
+    <h2>プリントの写真を送信</h2>
+    <p>撮影した写真からカレンダーに<br>自動で予定を追加します</p>
     <button class="cam-btn" onclick="document.getElementById('file-input').click()">
       📎 写真を選択
     </button>
     <input type="file" id="file-input" accept="image/*">
-    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="camera-input" accept="image/*" capture="environment">
   </div>
 </div>
 
