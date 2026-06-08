@@ -66,16 +66,17 @@ async function addCalendar(geminiReply, userId) {
   const isBoth    = checkAddress(geminiReply, 'どちらも');
 
   // 宛先に応じてカレンダーIDを決定
+  // 「生徒」「どちらも」「保護者」以外（「個人」など）は生徒扱い
   let calId1 = '';
   let calId2 = '';
-  if (isStudent) {
-    calId1 = studentCal;
-  } else if (isBoth) {
+  if (isBoth) {
     calId1 = studentCal;
     calId2 = parentCal;
-  } else {
-    // 保護者宛
+  } else if (checkAddress(geminiReply, '保護者')) {
     calId1 = parentCal;
+  } else {
+    // 生徒・個人・その他すべて生徒カレンダーへ
+    calId1 = studentCal;
   }
 
   debugLog(3, `calId1=${calId1} calId2=${calId2}`);
