@@ -317,6 +317,26 @@
   </div>
 </div>
 
+<!-- 設定画面 -->
+<div id="screen-settings" class="screen">
+  <div class="header">
+    <h1>⚙️ 設定</h1>
+    <p>アカウント情報</p>
+  </div>
+  <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+      <div style="font-size:12px; color:#6B6B6B; margin-bottom:6px;">あなたのLIFF User ID</div>
+      <div id="settings-userid" style="font-size:13px; font-family:monospace; word-break:break-all; color:#1A1A1A;">取得中...</div>
+    </div>
+    <button class="cam-btn" onclick="sendUserIdToLine()" style="margin-top:4px;">
+      📨 LINE にUser IDを送る
+    </button>
+    <p style="font-size:12px; color:#6B6B6B; text-align:center;">
+      このIDを管理者に伝えることで<br>カレンダー連携が有効になります
+    </p>
+  </div>
+</div>
+
 <!-- 確認画面 -->
 <div id="confirm-screen">
   <img id="confirm-img" src="" alt="確認画像">
@@ -344,7 +364,10 @@
     <span class="icon">🔔</span>タイムライン
   </button>
   <button class="nav-btn-item" onclick="showScreen('camera')" id="nav-camera">
-    <span class="icon">📷</span>カメラ
+    <span class="icon">📄</span>プリント
+  </button>
+  <button class="nav-btn-item" onclick="showScreen('settings')" id="nav-settings">
+    <span class="icon">⚙️</span>設定
   </button>
 </nav>
 
@@ -364,10 +387,34 @@
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) { liff.login(); return; }
       liffProfile = await liff.getProfile();
+      // 設定画面にuserIDを表示
+      document.getElementById('settings-userid').textContent = liffProfile.userId;
       await loadEvents();
       renderCalendar();
     } catch (e) {
       console.error('LIFF初期化エラー:', e);
+    }
+  }
+
+  async function sendUserIdToLine() {
+    if (!liffProfile) {
+      showToast('⚠️ LINEログインが必要です');
+      return;
+    }
+    try {
+      await liff.sendMessages([{
+        type: 'text',
+        text: `LIFF UserID: ${liffProfile.userId}`,
+      }]);
+      showToast('✅ LINEに送信しました');
+    } catch (e) {
+      // sendMessagesはLINE内ブラウザ以外では失敗するのでコピーにフォールバック
+      try {
+        await navigator.clipboard.writeText(liffProfile.userId);
+        showToast('📋 IDをクリップボードにコピーしました');
+      } catch {
+        showToast('ID: ' + liffProfile.userId);
+      }
     }
   }
 
