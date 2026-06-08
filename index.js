@@ -193,16 +193,6 @@ app.get('/events', async (req, res) => {
   }
 });
 
-// ── 予定リマインド cron（毎時0分・30分に実行） ──────────────────────
-cron.schedule('0,30 * * * *', async () => {
-  console.log('[cron] CheckNotification 実行');
-  try {
-    await checkNotification();
-  } catch (e) {
-    console.error('[cron] エラー:', e.message);
-  }
-}, { timezone: 'Asia/Tokyo' });
-
 // ── サーバー起動 ────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
