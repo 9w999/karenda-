@@ -91,7 +91,7 @@ async function addCalendar(geminiReply, userId) {
 
   for (let i = 0; i + 1 < eventItems.length; i += 2) {
     const title    = eventItems[i].trim();
-    const dateStr  = eventItems[i + 1]?.trim();
+    const dateStr  = (eventItems[i + 1] || '').replace(/\[要約\].*/g, '').trim();
     if (!title || !dateStr) continue;
 
     if (dateStr.includes(':')) {
