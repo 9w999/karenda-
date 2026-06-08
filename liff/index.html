@@ -328,8 +328,8 @@
       <div style="font-size:12px; color:#6B6B6B; margin-bottom:6px;">あなたのLIFF User ID</div>
       <div id="settings-userid" style="font-size:13px; font-family:monospace; word-break:break-all; color:#1A1A1A;">取得中...</div>
     </div>
-    <button class="cam-btn" onclick="sendUserIdToLine()" style="margin-top:4px;">
-      📨 LINE にUser IDを送る
+    <button class="cam-btn" onclick="copyUserId()">
+      📋 User IDをコピー
     </button>
     <p style="font-size:12px; color:#6B6B6B; text-align:center;">
       このIDを管理者に伝えることで<br>カレンダー連携が有効になります
@@ -396,25 +396,13 @@
     }
   }
 
-  async function sendUserIdToLine() {
-    if (!liffProfile) {
-      showToast('⚠️ LINEログインが必要です');
-      return;
-    }
+  async function copyUserId() {
+    if (!liffProfile) { showToast('⚠️ 取得中です'); return; }
     try {
-      await liff.sendMessages([{
-        type: 'text',
-        text: `LIFF UserID: ${liffProfile.userId}`,
-      }]);
-      showToast('✅ LINEに送信しました');
-    } catch (e) {
-      // sendMessagesはLINE内ブラウザ以外では失敗するのでコピーにフォールバック
-      try {
-        await navigator.clipboard.writeText(liffProfile.userId);
-        showToast('📋 IDをクリップボードにコピーしました');
-      } catch {
-        showToast('ID: ' + liffProfile.userId);
-      }
+      await navigator.clipboard.writeText(liffProfile.userId);
+      showToast('📋 IDをコピーしました');
+    } catch {
+      showToast('ID: ' + liffProfile.userId);
     }
   }
 
