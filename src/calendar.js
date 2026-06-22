@@ -96,7 +96,22 @@ async function addCalendar(geminiReply, userId) {
 
     if (dateStr.includes(':')) {
       // 時刻あり
-      const [startStr, endStr] = dateStr.split(':');
+    // 日時文字列を開始・終了に分割（YYYY/MM/DD/HH:mm:YYYY/MM/DD/HH:mm の形式にも対応）
+    const colonCount = (dateStr.match(/:/g) || []).length;
+    let startStr, endStr;
+    if (colonCount >= 2) {
+      // HH:mm形式が含まれる場合、年で分割
+      const match = dateStr.match(/^(\d{4}\/\d{2}\/\d{2}\/[\d:]+):(\d{4}\/.+)$/);
+      if (match) {
+        startStr = match[1];
+        endStr   = match[2];
+      } else {
+        startStr = dateStr;
+        endStr   = dateStr;
+      }
+    } else {
+      [startStr, endStr] = dateStr.split(':');
+    }
       const startDate = parseDateStr(startStr);
       const endDate   = parseDateStr(endStr);
       if (!startDate || !endDate) continue;
@@ -133,10 +148,12 @@ function isZeroTime(str) {
 }
 
 /**
- * "YYYY/MM/DD/HH/mm" または "YYYY/MM/DD/HHmm" → Date (JST)
+ * "YYYY/MM/DD/HH/mm" または "YYYY/MM/DD/HHmm" または "YYYY/MM/DD/HH:mm" → Date (JST)
  */
 function parseDateStr(str) {
   if (!str) return null;
+  // HH:mm形式をHH/mmに正規化
+  str = str.replace(/(\d{4}\/\d{2}\/\d{2}\/\d{2}):(\d{2})/, '$1/$2');
   const parts = str.split('/');
   let year, month, day, hour, minute;
   if (parts.length === 5) {
