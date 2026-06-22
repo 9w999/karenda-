@@ -2,43 +2,77 @@
 
 const { google } = require('googleapis');
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withRetry(fn, label, maxRetry = 3) {
+  let lastError;
+
+  for (let i = 1; i <= maxRetry; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      console.error(`[${label}] 失敗 ${i}/${maxRetry}:`, e.message);
+
+      if (i < maxRetry) {
+        await sleep(1000 * i);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 async function getSheetsClient() {
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON が設定されていません');
+  }
+
   const auth = new google.auth.GoogleAuth({
-    credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
+    credentials: JSON.parse(raw),
     scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
   });
+
   return google.sheets({ version: 'v4', auth });
 }
 
 let _cache = null;
+let _cacheTime = 0;
 
-/**
- * form シートの全行をキャッシュ付きで取得
- * 列構成（0始まり）:
- *   B列(1): 生徒のカレンダーID
- *   D列(3): 保護者のLINE ID
- *   E列(4): 保護者のカレンダーID
- *   F列(5): userId
- *   G列(6): 保護者のカレンダーID（別パターン）
- */
 async function getFormRows() {
-  const sheets = await getSheetsClient();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.SPREADSHEET_ID,
-    range: 'form!A:G',
-  });
-  const rows = res.data.values || [];
-  console.log(`[spreadsheet] form シート取得成功: ${rows.length}行`);
-  return rows;
+  const now = Date.now();
+
+  // 5分キャッシュ。毎回Google認証しに行かないようにする
+  if (_cache && now - _cacheTime < 5 * 60 * 1000) {
+    return _cache;
+  }
+
+  return await withRetry(async () => {
+    const sheets = await getSheetsClient();
+
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.SPREADSHEET_ID,
+      range: 'form!A:G',
+    });
+
+    const rows = res.data.values || [];
+    console.log(`[spreadsheet] form シート取得成功: ${rows.length}行`);
+
+    _cache = rows;
+    _cacheTime = Date.now();
+
+    return rows;
+  }, 'spreadsheet getFormRows');
 }
 
 function clearCache() {
   _cache = null;
+  _cacheTime = 0;
 }
 
-/**
- * userIdに一致する行を返す（F列=index5で検索）
- */
 async function findRow(userId) {
   const rows = await getFormRows();
   for (const row of rows) {
@@ -48,28 +82,20 @@ async function findRow(userId) {
   return null;
 }
 
-/**
- * 生徒・保護者のカレンダーIDを返す
- * 生徒カレンダー: B列、なければG列
- * 保護者カレンダー: E列
- */
 async function getCalendarIds(userId) {
   const row = await findRow(userId);
   if (!row) return { studentCal: '', parentCal: '' };
 
-  const studentCal = row[1] || row[6] || ''; // B列、なければG列
-  const parentCal  = row[4] || '';            // E列
+  const studentCal = row[1] || row[6] || '';
+  const parentCal  = row[4] || '';
 
   return { studentCal, parentCal };
 }
 
-/**
- * 保護者のLINE IDを返す（D列）
- */
 async function getParentLineId(userId) {
   const row = await findRow(userId);
   if (!row) return '';
-  return row[3] || ''; // D列
+  return row[3] || '';
 }
 
 module.exports = { getCalendarIds, getParentLineId, clearCache };
