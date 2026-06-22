@@ -22,21 +22,14 @@ let _cache = null;
  *   G列(6): 保護者のカレンダーID（別パターン）
  */
 async function getFormRows() {
-  if (_cache) return _cache;
-  try {
-    const sheets = await getSheetsClient();
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: 'form!A:G',
-    });
-    _cache = res.data.values || [];
-    console.log(`[spreadsheet] form シート取得成功: ${_cache.length}行`);
-    return _cache;
-  } catch (e) {
-    console.error('[spreadsheet] form シート取得エラー:', e.message);
-    if (e.response?.data) console.error('[spreadsheet] 詳細:', JSON.stringify(e.response.data));
-    return [];
-  }
+  const sheets = await getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.SPREADSHEET_ID,
+    range: 'form!A:G',
+  });
+  const rows = res.data.values || [];
+  console.log(`[spreadsheet] form シート取得成功: ${rows.length}行`);
+  return rows;
 }
 
 function clearCache() {
