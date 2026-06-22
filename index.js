@@ -197,3 +197,37 @@ app.get('/events', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+app.get('/debug/google-auth', async (req, res) => {
+  if (req.query.key !== process.env.DEBUG_KEY) {
+    return res.status(403).send('NG');
+  }
+
+  try {
+    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON がありません');
+
+    const creds = JSON.parse(raw);
+
+    const auth = new google.auth.GoogleAuth({
+      credentials: creds,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    });
+
+    const client = await auth.getClient();
+    const token = await client.getAccessToken();
+
+    res.json({
+      ok: true,
+      client_email: creds.client_email,
+      hasToken: !!token?.token,
+    });
+  } catch (e) {
+    console.error('[debug/google-auth]', e);
+    res.status(500).json({
+      ok: false,
+      name: e.name,
+      message: e.message,
+      response: e.response?.data || null,
+    });
+  }
+});
