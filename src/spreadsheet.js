@@ -34,7 +34,8 @@ function clearCache() {}
 async function findRow(userId) {
   const rows = await getFormRows();
   for (const row of rows) {
-    if (row[8] === userId) return row; // I列
+    // I列（LIFF userId）またはF列（LINE userId）で検索
+    if (row[8] === userId || row[5] === userId) return row;
   }
   console.warn(`[spreadsheet] userId "${userId}" が form シートに見つかりません`);
   return null;
@@ -52,7 +53,7 @@ async function getCalendarIds(userId) {
 async function getParentLineId(userId) {
   const row = await findRow(userId);
   if (!row) return '';
-  return row[3] || ''; // D列
+  return row[3] || ''; // D列（保護者のLINE ID）
 }
 
 module.exports = { getCalendarIds, getParentLineId, clearCache };
