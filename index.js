@@ -49,6 +49,14 @@ app.post('/webhook', async (req, res) => {
     if (event.type !== 'message') continue;
 
     if (event.message.type === 'image') {
+      // 複数枚同時送信の場合は1枚目のみ処理、それ以外は案内メッセージ
+      const imageSet = event.message.imageSet;
+      if (imageSet && imageSet.total > 1) {
+        if (imageSet.index === 1) {
+          await replyToUser(event.replyToken, '複数枚の写真が送られました。\n1枚ずつ送ってください。');
+        }
+        continue;
+      }
       await handleImageMessage(event, userId);
     } else if (event.message.type === 'text') {
       await handleTextMessage(event, userId);
@@ -196,38 +204,4 @@ app.get('/events', async (req, res) => {
 // ── サーバー起動 ────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-});
-app.get('/debug/google-auth', async (req, res) => {
-  if (req.query.key !== process.env.DEBUG_KEY) {
-    return res.status(403).send('NG');
-  }
-
-  try {
-    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-    if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON がありません');
-
-    const creds = JSON.parse(raw);
-
-    const auth = new google.auth.GoogleAuth({
-      credentials: creds,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
-
-    const client = await auth.getClient();
-    const token = await client.getAccessToken();
-
-    res.json({
-      ok: true,
-      client_email: creds.client_email,
-      hasToken: !!token?.token,
-    });
-  } catch (e) {
-    console.error('[debug/google-auth]', e);
-    res.status(500).json({
-      ok: false,
-      name: e.name,
-      message: e.message,
-      response: e.response?.data || null,
-    });
-  }
 });
