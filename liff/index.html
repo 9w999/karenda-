@@ -413,14 +413,16 @@
     calMonth = now.getMonth();
 
     // ナビボタンのイベント登録
-    document.getElementById('cal-prev').onclick = () => {
+    document.getElementById('cal-prev').onclick = async () => {
       calMonth--;
       if (calMonth < 0) { calMonth = 11; calYear--; }
+      await loadEvents();
       renderCalendar();
     };
-    document.getElementById('cal-next').onclick = () => {
+    document.getElementById('cal-next').onclick = async () => {
       calMonth++;
       if (calMonth > 11) { calMonth = 0; calYear++; }
+      await loadEvents();
       renderCalendar();
     };
     document.getElementById('file-input').addEventListener('change', handleFileSelect);
@@ -447,13 +449,12 @@
   async function loadEvents() {
     if (!liffProfile) return;
     try {
-      const res = await fetch(`${SERVER_URL}/events?userId=${liffProfile.userId}`);
+      const res = await fetch(`${SERVER_URL}/events?userId=${liffProfile.userId}&year=${calYear}&month=${calMonth + 1}`);
       if (res.ok) {
         events = await res.json();
       }
     } catch (e) {
       console.warn('イベント取得失敗:', e.message);
-      // サンプルデータ
       events = [];
     }
   }
