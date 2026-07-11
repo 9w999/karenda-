@@ -174,9 +174,12 @@ app.get('/events', async (req, res) => {
     });
     const cal = google.calendar({ version: 'v3', auth });
 
+    // year/monthパラメータで対象月を指定（なければ現在月）
     const now   = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const end   = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
+    const year  = parseInt(req.query.year)  || now.getFullYear();
+    const month = parseInt(req.query.month) || now.getMonth() + 1;
+    const start = new Date(year, month - 1, 1).toISOString();
+    const end   = new Date(year, month, 0, 23, 59, 59).toISOString();
 
     const result = await cal.events.list({
       calendarId: calId,
