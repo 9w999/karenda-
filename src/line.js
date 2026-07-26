@@ -1,7 +1,6 @@
 'use strict';
 
 const axios = require('axios');
-const { getParentLineId } = require('./spreadsheet');
 
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
 const HELP_NOTIFY_USER_ID  = process.env.HELP_NOTIFY_USER_ID || '';
@@ -55,18 +54,36 @@ async function notifyHelp(input) {
   await pushToUser(HELP_NOTIFY_USER_ID, `ヘルプが行われました\n\n${input}`);
 }
 
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
+
 /**
- * 保護者へプリント内容を通知する（GASのParentNotice相当）
- * 保護者のLINE IDは user_status シートから取得する
+ * 保護者へメールで通知する
  */
 async function parentNotice(contents, userId) {
-  const parentId = await getParentLineId(userId);
-  if (!parentId) {
-    console.warn('[parentNotice] 保護者のLINE IDが見つかりません userId:', userId);
+  const { parentCal } = await require('./spreadsheet').getCalendarIds(userId);
+  if (!parentCal) {
+    console.warn('[parentNotice] 保護者のメールアドレスが見つかりません userId:', userId);
     return;
   }
-  const body = `生徒に次の内容の手紙が配布されました\n\n${contents}`;
-  await pushToUser(parentId, body);
+  try {
+    await transporter.sendMail({
+      from: `"プリントカレンダー" <${process.env.MAIL_USER}>`,
+      to: parentCal,
+      subject: '【プリントカレンダー】お子さんにプリントが配布されました',
+      text: `生徒に次の内容の手紙が配布されました\n\n${contents}`,
+    });
+    console.log(`[parentNotice] メール送信完了: ${parentCal}`);
+  } catch (e) {
+    console.error('[parentNotice] メール送信エラー:', e.message);
+  }
 }
 
 module.exports = { replyToUser, pushToUser, notifyHelp, parentNotice };
