@@ -4,7 +4,7 @@ const cron = require('node-cron');
 const multer = require('multer');
 
 const { debugLog }            = require('./src/logger');
-const { replyToUser, notifyHelp } = require('./src/line');
+const { replyToUser, notifyHelp, pushToUser } = require('./src/line');
 const { geminiRes }           = require('./src/gemini');
 const { checkNotification }   = require('./src/remind');
 const { getCalendarIds }      = require('./src/spreadsheet');
@@ -150,6 +150,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
   try {
     const replyText = await geminiRes(req.file.buffer, userId);
+    // LINEトークにも同じ内容をpush
+    await pushToUser(userId, replyText).catch(e => console.error('[/upload] LINE push エラー:', e.message));
     res.json({ ok: true, message: replyText });
   } catch (e) {
     console.error('[/upload] エラー:', e.message);
