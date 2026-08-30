@@ -55,14 +55,29 @@ async function notifyHelp(input) {
 }
 
 const nodemailer = require('nodemailer');
+const { google }  = require('googleapis');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GMAIL_CLIENT_ID,
+  process.env.GMAIL_CLIENT_SECRET,
+  'https://developers.google.com/oauthplayground'
+);
+oauth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
+
+async function createTransporter() {
+  const { token } = await oauth2Client.getAccessToken();
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      type: 'OAuth2',
+      user: process.env.MAIL_USER,
+      clientId: process.env.GMAIL_CLIENT_ID,
+      clientSecret: process.env.GMAIL_CLIENT_SECRET,
+      refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+      accessToken: token,
+    },
+  });
+}
 
 /**
  * 保護者へメールで通知する
@@ -74,6 +89,7 @@ async function parentNotice(contents, userId) {
     return;
   }
   try {
+    const transporter = await createTransporter();
     await transporter.sendMail({
       from: `"プリントカレンダー" <${process.env.MAIL_USER}>`,
       to: parentCal,
