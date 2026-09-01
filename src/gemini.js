@@ -34,12 +34,39 @@ async function geminiRes(imageBuffer, userId) {
     }],
   };
 
-  const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API}`,
-    payload,
-    { headers: { 'Content-Type': 'application/json' } }
-  );
+  let response;
 
+for (let attempt = 0; attempt < 3; attempt++) {
+  try {
+    response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API}`,
+      payload,
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 60000
+      }
+    );
+
+    break;
+
+  } catch (e) {
+    const status = e.response?.status;
+
+    if ((status === 503 || status === 429) && attempt < 2) {
+      const wait = 1000 * Math.pow(2, attempt);
+
+      debugLog(
+        25,
+        `Gemini ${status} 再試行 ${attempt + 1}/3 ${wait}ms後`
+      );
+
+      await new Promise(resolve => setTimeout(resolve, wait));
+      continue;
+    }
+
+    throw e;
+  }
+}
   const geminiReply = response.data.candidates[0].content.parts[0].text.trim();
   debugLog(9, geminiReply);
   debugLog(5, '応答処理前');
