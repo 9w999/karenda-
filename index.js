@@ -151,7 +151,13 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   try {
     const replyText = await geminiRes(req.file.buffer, userId);
     // LINEトークにも同じ内容をpush
-    await pushToUser(userId, replyText).catch(e => console.error('[/upload] LINE push エラー:', e.message));
+    await pushToUser(userId, replyText).catch(e => {
+  console.error('[/upload] LINE push エラー:', e.message);
+  console.error('[/upload] LINE status:', e.response?.status);
+  console.error('[/upload] LINE detail:', JSON.stringify(e.response?.data));
+  console.error('[/upload] push userId:', userId);
+  console.error('[/upload] text length:', String(replyText).length);
+});
     res.json({ ok: true, message: replyText });
   } catch (e) {
     console.error('[/upload] エラー:', e.message);
